@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TCF Admin — Fortuna III Console</title>
+<meta name="robots" content="noindex, nofollow" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --tcf-bg:      #080b10;
+  --tcf-panel:   #0d1117;
+  --tcf-border:  #1e2a38;
+  --tcf-accent:  #2d7dd2;
+  --tcf-glow:    #3d9fe8;
+  --tcf-dim:     #4a6580;
+  --tcf-text:    #c8d8e8;
+  --tcf-bright:  #e8f0f8;
+  --tcf-warn:    #e85d3d;
+  --tcf-green:   #3db87a;
+  --tcf-gold:    #d4a843;
+}
+
+html, body {
+  height: 100%;
+  background: var(--tcf-bg);
+  color: var(--tcf-text);
+  font-family: 'Rajdhani', sans-serif;
+  overflow: hidden;
+}
+
+/* ── Animated background grid ── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(45,125,210,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,125,210,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridshift 20s linear infinite;
+}
+@keyframes gridshift { from { transform: translateY(0); } to { transform: translateY(40px); } }
+
+/* ── Radial glow ── */
+.bg-glow {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(45,125,210,0.12) 0%, transparent 70%);
+}
+
+/* ── Scanlines ── */
+.scanlines {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+}
+
+/* ── Corner decorations ── */
+.corner { position: fixed; width: 80px; height: 80px; z-index: 1; }
+.corner::before, .corner::after { content: ''; position: absolute; background: var(--tcf-accent); }
+.corner::before { width: 2px; height: 40px; }
+.corner::after  { width: 40px; height: 2px; }
+.corner.tl { top: 20px; left: 20px; }
+.corner.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+.corner.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+.corner.br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+/* ── Floating data strips ── */
+.datastrip {
+  position: fixed; font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--tcf-dim); opacity: 0.5; z-index: 1; letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.datastrip.left  { left: 24px; top: 50%; transform: translateY(-50%) rotate(-90deg) translateX(-50%); transform-origin: center; }
+.datastrip.right { right: 24px; top: 50%; transform: translateY(-50%) rotate(90deg) translateX(50%); transform-origin: center; }
+.datastrip.bottom { bottom: 28px; left: 50%; transform: translateX(-50%); }
+
+/* ── Main container ── */
+.container {
+  position: relative; z-index: 2;
+  height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0;
+}
+
+/* ── Logo / header ── */
+.logo-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin-bottom: 32px; animation: fadedown 0.7s ease both;
+}
+@keyframes fadedown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+
+.logo-hex {
+  width: 56px; height: 56px; margin-bottom: 4px;
+}
+.logo-title {
+  font-size: 28px; font-weight: 700; letter-spacing: 0.15em;
+  color: var(--tcf-bright); text-transform: uppercase;
+}
+.logo-sub {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: var(--tcf-dim); letter-spacing: 0.2em; text-transform: uppercase;
+}
+.logo-divider {
+  width: 160px; height: 1px; margin-top: 10px;
+  background: linear-gradient(90deg, transparent, var(--tcf-accent), transparent);
+}
+
+/* ── Panel card ── */
+.panel {
+  width: 420px;
+  background: var(--tcf-panel);
+  border: 1px solid var(--tcf-border);
+  border-radius: 4px;
+  position: relative;
+  animation: fadein 0.7s 0.15s ease both;
+  box-shadow: 0 0 60px rgba(45,125,210,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+@keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Panel corner marks */
+.panel::before, .panel::after {
+  content: ''; position: absolute; width: 12px; height: 12px;
+  border-color: var(--tcf-accent); border-style: solid;
+}
+.panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.panel::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+.panel-header {
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid var(--tcf-border);
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-status-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--tcf-green);
+  box-shadow: 0 0 6px var(--tcf-green); animation: blink 2.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.panel-header-text { font-size: 12px; color: var(--tcf-dim); letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Share Tech Mono', monospace; }
+.panel-header-right { margin-left: auto; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--tcf-dim); }
+
+.panel-body { padding: 28px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.access-title {
+  font-size: 20px; font-weight: 600; color: var(--tcf-bright);
+  letter-spacing: 0.06em; text-align: center;
+}
+.access-sub {
+  font-size: 14px; color: var(--tcf-dim); text-align: center; line-height: 1.5; margin-top: -8px;
+}
+
+/* Error message */
+.error-msg {
+  display: none; align-items: center; gap: 8px;
+  background: rgba(232,93,61,0.1); border: 1px solid rgba(232,93,61,0.3);
+  border-radius: 3px; padding: 10px 14px;
+  font-size: 13px; color: #f08070;
+}
+.error-msg.show { display: flex; }
+
+/* Requirements box */
+.req-box {
+  background: rgba(45,125,210,0.06); border: 1px solid rgba(45,125,210,0.15);
+  border-radius: 3px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.req-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--tcf-text); }
+.req-icon { width: 18px; text-align: center; color: var(--tcf-accent); font-size: 14px; flex-shrink: 0; }
+
+/* Steam button */
+.steam-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  background: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
+  border: 1px solid #4c7f9e;
+  border-radius: 3px; padding: 14px 24px;
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 600;
+  color: #c6d4df; letter-spacing: 0.08em; text-decoration: none;
+  text-transform: uppercase; cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative; overflow: hidden;
+}
+.steam-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+}
+.steam-btn:hover {
+  border-color: #6ab0d4; color: #e8f4ff;
+  box-shadow: 0 0 20px rgba(74,160,210,0.2);
+  transform: translateY(-1px);
+}
+.steam-btn:active { transform: translateY(0); }
+.steam-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+.panel-footer {
+  padding: 12px 24px; border-top: 1px solid var(--tcf-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-footer-text { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--tcf-dim); letter-spacing: 0.08em; }
+
+/* warning strip */
+.warn-strip {
+  margin-top: 20px; padding: 10px 16px;
+  background: rgba(212,168,67,0.07); border: 1px solid rgba(212,168,67,0.2);
+  border-radius: 3px; font-size: 12px; color: #a08040; text-align: center;
+  line-height: 1.5; animation: fadein 0.7s 0.4s ease both;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+<div class="datastrip left">SYS:ACTIVE // SECURE-CHANNEL-ESTABLISHED // FORTUNA-III-ADMIN // BUILD-2.4.1</div>
+<div class="datastrip right">CONN:ENCRYPTED // AUTH-PROVIDER:STEAM-OPENID // SESSION:NULL // ACCESS:DENIED</div>
+<div class="datastrip bottom">TCF-ADMIN v2.4.1 // UNAUTHORISED ACCESS IS MONITORED AND LOGGED // ALL SESSIONS AUDITED</div>
+
+<div class="container">
+  <div class="logo-wrap">
+    <svg class="logo-hex" viewBox="0 0 56 56" fill="none">
+      <path d="M28 4 L50 16 L50 40 L28 52 L6 40 L6 16 Z" stroke="#2d7dd2" stroke-width="1.5" fill="rgba(45,125,210,0.06)"/>
+      <path d="M28 10 L46 20 L46 36 L28 46 L10 36 L10 20 Z" stroke="#2d7dd2" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <text x="28" y="33" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700" font-size="16" fill="#2d7dd2">TCF</text>
+    </svg>
+    <div class="logo-title">Fortuna III</div>
+    <div class="logo-sub">Admin Console // Secure Access Portal</div>
+    <div class="logo-divider"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-status-dot"></div>
+      <div class="panel-header-text">Authentication required</div>
+      <div class="panel-header-right" id="clock">--:--:--</div>
+    </div>
+    <div class="panel-body">
+
+      <div>
+        <div class="access-title">Restricted Access</div>
+        <div class="access-sub" style="margin-top:6px;">Identity verification required to proceed.<br/>Only whitelisted Steam accounts may enter.</div>
+      </div>
+
+      <div class="error-msg" id="error-msg">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#e85d3d" stroke-width="1.5"/><path d="M8 4v4M8 10.5v1" stroke="#e85d3d" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span id="error-text">Authentication failed.</span>
+      </div>
+
+      <div class="req-box">
+        <div class="req-row">
+          <span class="req-icon">⬡</span>
+          <span>Valid Steam account required</span>
+        </div>
+        <div class="req-row">
+          <span class="req-icon">⬡</span>
+          <span>Account must be on the admin whitelist</span>
+        </div>
+        <div class="req-row">
+          <span class="req-icon">⬡</span>
+          <span>All sessions are logged and audited</span>
+        </div>
+      </div>
+
+      <a href="/auth/steam" class="steam-btn">
+        <!-- Steam logo SVG -->
+        <svg viewBox="0 0 24 24" fill="#c6d4df"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.718L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg>
+        Sign in with Steam
+      </a>
+
+    </div>
+    <div class="panel-footer">
+      <span class="panel-footer-text">TCF-ADMIN v2.4.1</span>
+      <span class="panel-footer-text">STEAM-OPENID // AES-256</span>
+    </div>
+  </div>
+
+  <div class="warn-strip">
+    ⚠ &nbsp;Unauthorised access attempts are logged with IP, timestamp, and fingerprint data.
+  </div>
+</div>
+
+<script>
+  // Live clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toUTCString().slice(17, 25) + ' UTC';
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Show error from query string
+  const params = new URLSearchParams(location.search);
+  const err = params.get('error');
+  if (err) {
+    const msgs = {
+      auth_failed:    'Steam authentication failed. Please try again.',
+      not_authorised: 'Your Steam account is not on the admin whitelist.',
+      session_error:  'Session error during login. Please try again.',
+      login_error:    'Login processing error. Please try again.',
+    };
+    const el = document.getElementById('error-msg');
+    document.getElementById('error-text').textContent = msgs[err] || 'Authentication error.';
+    el.classList.add('show');
+    // Clean URL without reloading
+    history.replaceState({}, '', '/');
+  }
+</script>
+</body>
+</html>

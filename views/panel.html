@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>TCF Admin — Fortuna III Console</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg1:#0d1117;--bg2:#111820;--bg3:#080b10;
+  --border:#1e2a38;--border2:#253040;
+  --accent:#2d7dd2;--glow:#3d9fe8;
+  --text:#c8d8e8;--text2:#8aa0b8;--text3:#4a6580;
+  --green:#3db87a;--red:#e85d3d;--amber:#d4a843;--purple:#9b7dd4;
+  --legendary:#e85d3d;--rare:#9b7dd4;--uncommon:#2d7dd2;--common:#4a6580;
+  --label-leg:#f7c1c1;--label-rare:#d0c8f8;--label-unc:#b5d4f4;--label-com:#7a8a9a;
+  --font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+  --r:6px;
+}
+html,body{height:100%;background:var(--bg3);color:var(--text);font-family:var(--font);}
+
+/* ── Shell ── */
+.shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:210px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:var(--bg1);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.content{flex:1;overflow-y:auto;padding:16px 20px;}
+
+/* ── Sidebar ── */
+.sidebar-logo{padding:16px;border-bottom:1px solid var(--border);}
+.logo-t{font-size:14px;font-weight:700;color:var(--text);letter-spacing:.1em;text-transform:uppercase;}
+.logo-s{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;letter-spacing:.08em;}
+.nav-sec{padding:10px 10px 3px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 6px;border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:background .1s,color .1s;letter-spacing:.04em;}
+.nav-item:hover{background:var(--bg2);color:var(--text);}
+.nav-item.active{background:rgba(45,125,210,.15);color:var(--accent);border-left:2px solid var(--accent);padding-left:8px;}
+.nav-item i{font-size:14px;width:16px;text-align:center;pointer-events:none;}
+.sidebar-footer{margin-top:auto;padding:10px 6px;border-top:1px solid var(--border);}
+
+/* ── Topbar ── */
+.topbar-title{font-size:16px;font-weight:600;color:var(--text);letter-spacing:.06em;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:5px 10px;}
+.user-avatar{width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);}
+.user-name{font-size:13px;color:var(--text2);font-weight:500;}
+
+/* ── Badges ── */
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em;}
+.b-green{background:rgba(61,184,122,.15);color:#3db87a;border:1px solid rgba(61,184,122,.25);}
+.b-blue{background:rgba(45,125,210,.15);color:#5aa0e0;border:1px solid rgba(45,125,210,.25);}
+.b-amber{background:rgba(212,168,67,.15);color:#d4a843;border:1px solid rgba(212,168,67,.25);}
+.b-red{background:rgba(232,93,61,.15);color:#e88060;border:1px solid rgba(232,93,61,.25);}
+.b-purple{background:rgba(155,125,212,.15);color:#b090e0;border:1px solid rgba(155,125,212,.25);}
+.b-gray{background:rgba(74,101,128,.15);color:#6a8090;border:1px solid rgba(74,101,128,.25);}
+.b-teal{background:rgba(45,180,160,.15);color:#3dc8b0;border:1px solid rgba(45,180,160,.25);}
+
+/* ── Cards / panels ── */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.card:last-child{margin-bottom:0;}
+.hd{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.htitle{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;letter-spacing:.05em;text-transform:uppercase;}
+.htitle i{font-size:13px;color:var(--text3);}
+
+/* ── Buttons ── */
+.btn{font-size:11px;font-weight:600;padding:5px 11px;border-radius:4px;border:1px solid var(--border2);background:transparent;cursor:pointer;color:var(--text2);transition:all .15s;letter-spacing:.04em;font-family:var(--font);}
+.btn:hover{background:var(--bg2);color:var(--text);border-color:var(--text3);}
+.btn.danger{border-color:rgba(232,93,61,.4);color:#e88060;}
+.btn.danger:hover{background:rgba(232,93,61,.1);}
+.btn.primary{border-color:rgba(45,125,210,.5);color:#5aa0e0;background:rgba(45,125,210,.08);}
+.btn.primary:hover{background:rgba(45,125,210,.18);}
+
+/* ── Stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;}
+.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);margin-bottom:5px;}
+.stat-val{font-size:22px;font-weight:700;color:var(--text);}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.delta-up{color:var(--green);}
+.delta-dn{color:var(--red);}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{padding:7px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--bg2);font-family:var(--mono);}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:7px;vertical-align:middle;font-family:var(--mono);}
+.av-b{background:rgba(45,125,210,.3);color:#7ab8f0;}
+.av-p{background:rgba(155,125,212,.3);color:#c0a8f8;}
+.av-c{background:rgba(232,93,61,.3);color:#f0a090;}
+.av-g{background:rgba(61,184,122,.3);color:#80d0a0;}
+.av-a{background:rgba(212,168,67,.3);color:#e0c878;}
+
+/* ── Views ── */
+.view{display:none;}.view.active{display:block;}
+
+/* ── 2-col ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── Faction bars ── */
+.faction-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:12px;}
+.faction-row:last-child{border-bottom:none;}
+.faction-bar-wrap{flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.faction-bar{height:100%;border-radius:3px;}
+
+/* ── Server dots ── */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;}
+.dot-g{background:var(--green);box-shadow:0 0 5px var(--green);}
+.dot-r{background:var(--red);box-shadow:0 0 5px var(--red);}
+.dot-a{background:var(--amber);box-shadow:0 0 5px var(--amber);}
+
+/* ── Live dot ── */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;margin-right:7px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ── Search bar ── */
+.search-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg2);}
+.search-bar input{font-size:13px;border:none;background:transparent;color:var(--text);outline:none;flex:1;font-family:var(--font);}
+.search-bar input::placeholder{color:var(--text3);}
+
+/* ── Item tiles ── */
+.item-grid{display:flex;flex-wrap:wrap;gap:8px;padding:14px;}
+.item-tile{width:86px;display:flex;flex-direction:column;cursor:pointer;border-radius:4px;overflow:hidden;border:1.5px solid transparent;transition:border-color .15s,transform .1s;}
+.item-tile:hover{transform:scale(1.04);}
+.item-tile.legendary{border-color:var(--legendary);}
+.item-tile.rare{border-color:var(--rare);}
+.item-tile.uncommon{border-color:var(--uncommon);}
+.item-tile.common{border-color:#2a3a4a;}
+.item-img{width:86px;height:86px;display:flex;align-items:center;justify-content:center;position:relative;background:#111820;}
+.item-qty{position:absolute;bottom:3px;right:5px;font-size:11px;font-weight:600;color:#fff;font-family:var(--mono);}
+.item-ins{position:absolute;top:3px;right:4px;font-size:9px;background:#1a4a2a;color:#3db87a;padding:1px 4px;border-radius:2px;font-family:var(--mono);}
+.item-label{background:#0a0e14;padding:4px 5px 5px;text-align:center;}
+.item-label span{font-size:9px;line-height:1.2;display:block;font-family:var(--mono);}
+
+/* ── Equip zone ── */
+.equip-zone{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px;}
+.equip-slot{display:flex;flex-direction:column;gap:5px;}
+.slot-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);}
+.equip-tile{width:100%;aspect-ratio:1;display:flex;flex-direction:column;border-radius:4px;overflow:hidden;border:1.5px solid #1e2a38;}
+.equip-tile.legendary{border-color:var(--legendary);}
+.equip-tile.rare{border-color:var(--rare);}
+.equip-tile.uncommon{border-color:var(--uncommon);}
+.equip-img{flex:1;background:#111820;display:flex;align-items:center;justify-content:center;position:relative;}
+.equip-label{background:#0a0e14;padding:3px 4px;text-align:center;}
+.equip-label span{font-size:9px;color:#7a8a9a;display:block;line-height:1.3;font-family:var(--mono);}
+.slot-empty .equip-img{background:#0d1117;}
+.slot-empty .equip-label span{color:#2a3a4a;}
+
+/* ── Stat row ── */
+.stat-row{display:flex;gap:10px;padding:12px 14px;flex-wrap:wrap;}
+.stat-chip{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;flex:1;min-width:80px;}
+.chip-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:4px;}
+.chip-val{font-size:17px;font-weight:700;color:var(--text);}
+
+/* ── Death block ── */
+.death-block{border-top:1px solid var(--border);}
+.death-hd-inner{padding:9px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.death-meta{font-size:12px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--border);}
+.death-meta span{display:flex;align-items:center;gap:4px;}
+.sec-sep{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 2px;font-family:var(--mono);}
+
+/* ── Bar helpers ── */
+.bar-wrap{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-top:4px;}
+.bar{height:100%;border-radius:2px;background:var(--accent);}
+
+/* ── Currency inputs ── */
+.cur-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 0;}
+.cur-row input{width:100px;font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--mono);}
+
+/* ── Audit log ── */
+.audit-row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.audit-row:last-child{border-bottom:none;}
+.audit-time{color:var(--text3);font-size:11px;min-width:108px;font-family:var(--mono);}
+
+/* ── Profile card ── */
+.profile-header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px;}
+.big-avatar{width:56px;height:56px;border-radius:50%;background:rgba(45,125,210,.3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#7ab8f0;font-family:var(--mono);flex-shrink:0;border:2px solid var(--border2);}
+.big-steam-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);flex-shrink:0;}
+
+/* ── Logout button ── */
+.logout-btn{font-size:11px;font-weight:600;padding:5px 11px;border-radius:4px;border:1px solid rgba(232,93,61,.3);background:transparent;cursor:pointer;color:#e88060;letter-spacing:.04em;font-family:var(--font);}
+.logout-btn:hover{background:rgba(232,93,61,.1);}
+
+/* ── Add item row ── */
+.add-row{display:flex;gap:7px;padding:10px 14px;border-top:1px solid var(--border);align-items:center;background:var(--bg2);}
+.add-row input,.add-row select{font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--bg1);color:var(--text);font-family:var(--font);}
+.add-row input{flex:1;}
+
+/* ── Toast ── */
+.toast{display:none;position:fixed;bottom:24px;right:24px;background:rgba(61,184,122,.15);border:1px solid rgba(61,184,122,.3);color:#3db87a;border-radius:var(--r);padding:10px 16px;font-size:13px;font-weight:500;z-index:9999;align-items:center;gap:8px;letter-spacing:.04em;}
+.toast.show{display:flex;}
+
+/* Ins note */
+.ins-note{font-size:12px;padding:8px 16px;color:var(--text2);border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
+
+<div class="shell">
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-t">⬡ TCF Admin</div>
+    <div class="logo-s">Fortuna III Console</div>
+  </div>
+  <div class="nav-sec">Overview</div>
+  <div class="nav-item active" onclick="nav('dashboard',this)"><i class="fa-solid fa-gauge-high"></i>Dashboard</div>
+  <div class="nav-item" onclick="nav('players',this)"><i class="fa-solid fa-users"></i>Players</div>
+  <div class="nav-sec">Game</div>
+  <div class="nav-item" onclick="nav('servers',this)"><i class="fa-solid fa-server"></i>Servers</div>
+  <div class="nav-item" onclick="nav('items',this)"><i class="fa-solid fa-box"></i>Items &amp; Loot</div>
+  <div class="nav-item" onclick="nav('factions',this)"><i class="fa-solid fa-flag"></i>Factions</div>
+  <div class="nav-sec">Player Detail</div>
+  <div class="nav-item" onclick="nav('profile',this)"><i class="fa-solid fa-id-card"></i>Player Profile</div>
+  <div class="nav-item" onclick="nav('stash',this)"><i class="fa-solid fa-backpack"></i>Stash Editor</div>
+  <div class="nav-item" onclick="nav('raids',this)"><i class="fa-solid fa-person-rifle"></i>Raid Viewer</div>
+  <div class="nav-sec">System</div>
+  <div class="nav-item" onclick="nav('reports',this)"><i class="fa-solid fa-triangle-exclamation"></i>Reports</div>
+  <div class="nav-item" onclick="nav('bans',this)"><i class="fa-solid fa-ban"></i>Bans</div>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="nav('settings',this)"><i class="fa-solid fa-gear"></i>Settings</div>
+  </div>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <span class="badge b-green">⬡ All systems nominal</span>
+      <div class="user-chip" id="user-chip">
+        <img class="user-avatar" id="user-avatar" src="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%234a6580' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 3.6-7 8-7s8 3 8 7'/%3E%3C/svg%3E" alt="avatar"/>
+        <span class="user-name" id="user-name">Loading…</span>
+      </div>
+      <form action="/auth/logout" method="POST" style="margin:0;">
+        <button class="logout-btn" type="submit">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-lbl">Active players</div><div class="stat-val">4,821</div><div class="stat-sub delta-up">↑ 12% today</div></div>
+        <div class="stat-card"><div class="stat-lbl">Matches today</div><div class="stat-val">9,340</div><div class="stat-sub delta-up">↑ 8% today</div></div>
+        <div class="stat-card"><div class="stat-lbl">Open reports</div><div class="stat-val">37</div><div class="stat-sub delta-dn">↑ 5 new</div></div>
+        <div class="stat-card"><div class="stat-lbl">Active servers</div><div class="stat-val">142</div><div class="stat-sub">3 offline</div></div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-wave-square"></i>Recent activity</div></div>
+        <table><thead><tr><th>Player</th><th>Event</th><th>Map</th><th>K/D</th><th>Time</th></tr></thead><tbody>
+          <tr><td><span class="avatar av-b">VX</span>VoidX99</td><td><span class="badge b-green">Extracted</span></td><td>Bright Sands</td><td>3 / 1</td><td>4m ago</td></tr>
+          <tr><td><span class="avatar av-c">ST</span>StormRider</td><td><span class="badge b-red">Died</span></td><td>Crescent Falls</td><td>1 / 2</td><td>7m ago</td></tr>
+          <tr><td><span class="avatar av-p">KN</span>KnightOwl</td><td><span class="badge b-amber">Evacuating</span></td><td>Tharis Island</td><td>5 / 0</td><td>9m ago</td></tr>
+          <tr><td><span class="avatar av-g">DR</span>DarkRealm</td><td><span class="badge b-green">Extracted</span></td><td>Bright Sands</td><td>2 / 1</td><td>11m ago</td></tr>
+          <tr><td><span class="avatar av-a">PH</span>PhantomHex</td><td><span class="badge b-red">Died</span></td><td>Crescent Falls</td><td>0 / 3</td><td>15m ago</td></tr>
+        </tbody></table>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="hd"><div class="htitle"><i class="fa-solid fa-flag"></i>Faction standings</div></div>
+          <div class="faction-row"><span style="font-size:13px;width:80px;">Korolev</span><div class="faction-bar-wrap"><div class="faction-bar" style="width:72%;background:var(--accent)"></div></div><span style="font-size:11px;color:var(--text3);width:30px;text-align:right">72%</span></div>
+          <div class="faction-row"><span style="font-size:13px;width:80px;">Osiris</span><div class="faction-bar-wrap"><div class="faction-bar" style="width:58%;background:var(--purple)"></div></div><span style="font-size:11px;color:var(--text3);width:30px;text-align:right">58%</span></div>
+          <div class="faction-row"><span style="font-size:13px;width:80px;">ICA</span><div class="faction-bar-wrap"><div class="faction-bar" style="width:45%;background:var(--green)"></div></div><span style="font-size:11px;color:var(--text3);width:30px;text-align:right">45%</span></div>
+        </div>
+        <div class="card">
+          <div class="hd"><div class="htitle"><i class="fa-solid fa-server"></i>Server health</div></div>
+          <div class="faction-row" style="justify-content:space-between;font-size:13px;"><span><span class="dot dot-g"></span>EU West</span><span class="badge b-green">Online</span></div>
+          <div class="faction-row" style="justify-content:space-between;font-size:13px;"><span><span class="dot dot-g"></span>NA East</span><span class="badge b-green">Online</span></div>
+          <div class="faction-row" style="justify-content:space-between;font-size:13px;"><span><span class="dot dot-a"></span>APAC</span><span class="badge b-amber">High load</span></div>
+          <div class="faction-row" style="justify-content:space-between;font-size:13px;"><span><span class="dot dot-r"></span>SA</span><span class="badge b-red">Offline</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PLAYERS ═══ -->
+    <div id="view-players" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-users"></i>Player management</div><button class="btn primary">+ Add player</button></div>
+        <div class="search-bar"><i class="fa-solid fa-search" style="color:var(--text3);font-size:13px;"></i><input type="text" placeholder="Search by username, ID, or email…"/></div>
+        <table><thead><tr><th>Player</th><th>Level</th><th>Faction</th><th>K/D</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+          <tr><td><span class="avatar av-b">VX</span>VoidX99</td><td>84</td><td>Korolev</td><td>2.41</td><td>1,204</td><td><span class="badge b-green">Active</span></td><td><button class="btn" onclick="nav('profile',null)" style="margin-right:4px;">View</button><button class="btn" onclick="nav('stash',null)" style="margin-right:4px;">Stash</button><button class="btn danger" onclick="toast('Ban issued for VoidX99')">Ban</button></td></tr>
+          <tr><td><span class="avatar av-c">ST</span>StormRider</td><td>62</td><td>Osiris</td><td>1.87</td><td>876</td><td><span class="badge b-green">Active</span></td><td><button class="btn" onclick="toast('Loading StormRider profile…')" style="margin-right:4px;">View</button><button class="btn" onclick="toast('Loading StormRider stash…')" style="margin-right:4px;">Stash</button><button class="btn danger" onclick="toast('Ban issued for StormRider')">Ban</button></td></tr>
+          <tr><td><span class="avatar av-p">KN</span>KnightOwl</td><td>91</td><td>ICA</td><td>3.12</td><td>2,050</td><td><span class="badge b-blue">In match</span></td><td><button class="btn" onclick="toast('Loading KnightOwl profile…')" style="margin-right:4px;">View</button><button class="btn" onclick="nav('raids',null)" style="margin-right:4px;">Live raid</button><button class="btn danger" onclick="toast('Ban issued for KnightOwl')">Ban</button></td></tr>
+          <tr><td><span class="avatar av-g">DR</span>DarkRealm</td><td>45</td><td>Korolev</td><td>1.20</td><td>412</td><td><span class="badge b-green">Active</span></td><td><button class="btn" onclick="toast('Loading DarkRealm profile…')" style="margin-right:4px;">View</button><button class="btn" onclick="toast('Loading DarkRealm stash…')" style="margin-right:4px;">Stash</button><button class="btn danger" onclick="toast('Ban issued for DarkRealm')">Ban</button></td></tr>
+          <tr><td><span class="avatar av-a">PH</span>PhantomHex</td><td>33</td><td>Osiris</td><td>0.88</td><td>210</td><td><span class="badge b-amber">Warned</span></td><td><button class="btn" onclick="toast('Loading PhantomHex profile…')" style="margin-right:4px;">View</button><button class="btn" onclick="toast('Loading PhantomHex stash…')" style="margin-right:4px;">Stash</button><button class="btn danger" onclick="toast('Ban issued for PhantomHex')">Ban</button></td></tr>
+          <tr><td><span class="avatar av-b">ZZ</span>ZeroZone</td><td>78</td><td>ICA</td><td>2.95</td><td>1,680</td><td><span class="badge b-red">Banned</span></td><td><button class="btn" onclick="toast('Loading ZeroZone profile…')" style="margin-right:4px;">View</button><button class="btn primary" onclick="toast('ZeroZone unbanned.')">Unban</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ SERVERS ═══ -->
+    <div id="view-servers" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-server"></i>Server instances</div></div>
+        <table><thead><tr><th>Server ID</th><th>Region</th><th>Map</th><th>Players</th><th>Tick</th><th>Uptime</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+          <tr><td style="font-family:var(--mono);font-size:11px;">TCF-EU-001</td><td>EU West</td><td>Bright Sands</td><td>18/20</td><td>60Hz</td><td>99.9%</td><td><span class="badge b-green">Online</span></td><td><button class="btn danger">Restart</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">TCF-EU-002</td><td>EU West</td><td>Crescent Falls</td><td>12/20</td><td>60Hz</td><td>99.7%</td><td><span class="badge b-green">Online</span></td><td><button class="btn danger">Restart</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">TCF-NA-001</td><td>NA East</td><td>Tharis Island</td><td>20/20</td><td>60Hz</td><td>100%</td><td><span class="badge b-blue">Full</span></td><td><button class="btn danger">Restart</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">TCF-AP-001</td><td>APAC</td><td>Bright Sands</td><td>19/20</td><td>30Hz</td><td>98.2%</td><td><span class="badge b-amber">High load</span></td><td><button class="btn danger">Restart</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">TCF-SA-001</td><td>SA</td><td>—</td><td>0/20</td><td>—</td><td>0%</td><td><span class="badge b-red">Offline</span></td><td><button class="btn primary">Bring up</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ ITEMS ═══ -->
+    <div id="view-items" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-box"></i>Items &amp; loot</div><button class="btn primary">Configure spawn rates</button></div>
+        <table><thead><tr><th>Item</th><th>Category</th><th>Rarity</th><th>Spawn rate</th><th>Map</th><th>Actions</th></tr></thead><tbody>
+          <tr><td>Assault Rifle MK2</td><td>Weapon</td><td><span class="badge b-red">Legendary</span></td><td>0.8%</td><td>All</td><td><button class="btn">Edit</button></td></tr>
+          <tr><td>Pale Ivy Blossom</td><td>Quest item</td><td><span class="badge b-purple">Rare</span></td><td>2.1%</td><td>Bright Sands</td><td><button class="btn">Edit</button></td></tr>
+          <tr><td>Shock Grenade</td><td>Throwable</td><td><span class="badge b-blue">Uncommon</span></td><td>5.4%</td><td>All</td><td><button class="btn">Edit</button></td></tr>
+          <tr><td>Optic Camo Module</td><td>Gear</td><td><span class="badge b-red">Legendary</span></td><td>0.3%</td><td>Crescent Falls</td><td><button class="btn">Edit</button></td></tr>
+          <tr><td>Medkit</td><td>Consumable</td><td><span class="badge b-gray">Common</span></td><td>12.0%</td><td>All</td><td><button class="btn">Edit</button></td></tr>
+          <tr><td>Crusher Bone Fragment</td><td>Creature drop</td><td><span class="badge b-purple">Rare</span></td><td>1.6%</td><td>Tharis Island</td><td><button class="btn">Edit</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ FACTIONS ═══ -->
+    <div id="view-factions" class="view">
+      <div class="grid2">
+        <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-flag"></i>Korolev Heavy Industries</div></div><div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Active members</span><strong>18,340</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Avg player level</span><strong>67</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Contracts completed</span><strong>94,210</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Rep multiplier</span><strong>1.0×</strong></div>
+        </div></div>
+        <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-flag"></i>Osiris Research</div></div><div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Active members</span><strong>14,870</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Avg player level</span><strong>59</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Contracts completed</span><strong>71,440</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Rep multiplier</span><strong>1.1×</strong></div>
+        </div></div>
+        <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-flag"></i>ICA</div></div><div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Active members</span><strong>11,200</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Avg player level</span><strong>74</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Contracts completed</span><strong>58,900</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Rep multiplier</span><strong>1.2×</strong></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- ═══ PROFILE ═══ -->
+    <div id="view-profile" class="view">
+      <div class="card">
+        <div class="profile-header">
+          <div class="big-avatar">VX</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:18px;font-weight:700;letter-spacing:.06em;">VoidX99</span>
+              <span class="badge b-green">Active</span><span class="badge b-blue">Level 84</span><span class="badge b-purple">Veteran</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">ID: TCF-00041821 · Registered: 14 Aug 2022 · Last login: Today, 09:14</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px;">Region: EU West · Faction: Korolev · Platform: PC</div>
+          </div>
+          <div style="display:flex;gap:7px;flex-shrink:0;"><button class="btn">Warn</button><button class="btn">Suspend</button><button class="btn danger">Ban</button></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-lbl">K/D Ratio</div><div class="stat-val">2.41</div><div class="stat-sub">Above avg</div></div>
+        <div class="stat-card"><div class="stat-lbl">Hours played</div><div class="stat-val">1,204</div></div>
+        <div class="stat-card"><div class="stat-lbl">Matches</div><div class="stat-val">3,870</div><div class="stat-sub">2,610 extracted</div></div>
+        <div class="stat-card"><div class="stat-lbl">Extraction rate</div><div class="stat-val">67%</div><div class="stat-sub">Top 15%</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-crosshairs"></i>Combat stats</div></div><div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Total kills</span><strong>9,340</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Total deaths</span><strong>3,873</strong></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:var(--text2)">Headshot %</span><strong>34%</strong></div><div class="bar-wrap"><div class="bar" style="width:34%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:var(--text2)">Accuracy</span><strong>28%</strong></div><div class="bar-wrap"><div class="bar" style="width:28%"></div></div></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Avg damage/match</span><strong>840</strong></div>
+        </div></div>
+        <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-flag"></i>Faction & progression</div></div><div style="padding:14px;font-size:13px;display:flex;flex-direction:column;gap:10px;">
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:var(--text2)">Korolev rep</span><strong>41,200/50k</strong></div><div class="bar-wrap"><div class="bar" style="width:82%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:var(--text2)">Osiris rep</span><strong>18,400/50k</strong></div><div class="bar-wrap"><div class="bar" style="width:37%;background:var(--purple)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:var(--text2)">ICA rep</span><strong>9,700/50k</strong></div><div class="bar-wrap"><div class="bar" style="width:19%;background:var(--green)"></div></div></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">K-Marks</span><strong>284,500</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2)">Aurum</span><strong>1,200</strong></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- ═══ STASH ═══ -->
+    <div id="view-stash" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-backpack"></i>Stash — VoidX99</div><div style="display:flex;gap:8px;"><button class="btn danger" onclick="confirmClear()">Clear stash</button><button class="btn primary" onclick="showAdd()">+ Add item</button></div></div>
+        <div class="item-grid" id="stash-grid"></div>
+        <div class="add-row" id="add-row" style="display:none;">
+          <input type="text" id="new-name" placeholder="Item name…"/>
+          <select id="new-cat"><option>Weapon</option><option>Gear</option><option>Consumable</option><option>Quest item</option><option>Throwable</option><option>Creature drop</option></select>
+          <select id="new-rar"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Legendary</option></select>
+          <input type="number" id="new-qty" value="1" min="1" max="999" style="width:60px;"/>
+          <button class="btn primary" onclick="addItem()">Add</button>
+          <button class="btn" onclick="hideAdd()">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-shield"></i>Insurance packages</div></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:10px;" id="ins-list"></div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-coins"></i>Currency</div></div>
+        <div style="padding:14px 16px;">
+          <div class="cur-row"><span style="color:var(--text2);">K-Marks</span><div style="display:flex;gap:7px;"><input type="number" id="kmarks" value="284500"/><button class="btn primary" onclick="saveCur('kmarks','K-Marks')">Set</button></div></div>
+          <div class="cur-row"><span style="color:var(--text2);">Aurum</span><div style="display:flex;gap:7px;"><input type="number" id="aurum" value="1200"/><button class="btn primary" onclick="saveCur('aurum','Aurum')">Set</button></div></div>
+          <div class="cur-row"><span style="color:var(--text2);">Safe pocket slots</span><div style="display:flex;gap:7px;"><input type="number" id="safepockets" value="4" min="0" max="12"/><button class="btn primary" onclick="saveCur('safepockets','Safe pockets')">Set</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RAIDS ═══ -->
+    <div id="view-raids" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><span class="live-dot"></span>Live raid — Bright Sands</div><div style="display:flex;gap:7px;align-items:center;"><span class="badge b-green">In progress</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="rtimer">14:32</span><button class="btn danger">Force extract</button></div></div>
+        <div class="stat-row">
+          <div class="stat-chip"><div class="chip-lbl">Health</div><div class="chip-val" style="color:var(--green)">74 hp</div></div>
+          <div class="stat-chip"><div class="chip-lbl">Kills</div><div class="chip-val">2</div></div>
+          <div class="stat-chip"><div class="chip-lbl">Damage</div><div class="chip-val">840</div></div>
+          <div class="stat-chip"><div class="chip-lbl">Squad</div><div class="chip-val">Solo</div></div>
+        </div>
+        <div style="border-top:1px solid var(--border);"><div class="sec-sep">Equipped</div><div class="equip-zone" id="live-equip"></div></div>
+        <div style="border-top:1px solid var(--border);"><div class="sec-sep">Backpack</div><div class="item-grid" id="live-bp"></div></div>
+        <div style="border-top:1px solid var(--border);"><div class="sec-sep">Safe pockets</div><div class="item-grid" id="live-safe"></div></div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-skull"></i>Death reports — failed extractions</div><span class="badge b-red">2 recent</span></div>
+        <div class="death-block">
+          <div class="death-hd-inner"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;font-weight:600;">Yesterday 21:30 · Bright Sands</span><span class="badge b-red">Killed by player</span></div><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">Match #3869 · 9m in</span></div>
+          <div class="death-meta"><span><i class="fa-solid fa-user fa-xs"></i>StormRider</span><span><i class="fa-solid fa-crosshairs fa-xs"></i>SMG-76</span><span><i class="fa-solid fa-location-dot fa-xs"></i>Waterfall Ridge</span><span><i class="fa-solid fa-heart fa-xs"></i>0 hp</span></div>
+          <div class="sec-sep">Gear worn at death</div><div class="equip-zone" id="d1-equip"></div>
+          <div class="sec-sep" style="border-top:1px solid var(--border);">Lost inventory</div><div class="item-grid" id="d1-lost"></div>
+          <div class="ins-note"><i class="fa-solid fa-shield" style="color:var(--green);"></i><span class="badge b-green">Insurance payout</span>AR MK2 returned · Korolev Suit Mk3 returned</div>
+        </div>
+        <div class="death-block">
+          <div class="death-hd-inner"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;font-weight:600;">3 days ago · Crescent Falls</span><span class="badge b-amber">Killed by creature</span></div><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">Match #3855 · 5m in</span></div>
+          <div class="death-meta"><span><i class="fa-solid fa-paw fa-xs"></i>Crusher</span><span><i class="fa-solid fa-crosshairs fa-xs"></i>Slam</span><span><i class="fa-solid fa-location-dot fa-xs"></i>Old Power Plant</span><span><i class="fa-solid fa-heart fa-xs"></i>0 hp</span></div>
+          <div class="sec-sep">Gear worn at death</div><div class="equip-zone" id="d2-equip"></div>
+          <div class="sec-sep" style="border-top:1px solid var(--border);">Lost inventory</div><div class="item-grid" id="d2-lost"></div>
+          <div class="ins-note"><i class="fa-solid fa-shield" style="color:var(--text3);"></i><span class="badge b-gray">No payout</span>No insured items lost</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div id="view-reports" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-triangle-exclamation"></i>Player reports</div></div>
+        <table><thead><tr><th>ID</th><th>Reported</th><th>Reason</th><th>Reporter</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+          <tr><td style="font-family:var(--mono);font-size:11px;">#4821</td><td>ZeroZone</td><td>Aimbot suspected</td><td>VoidX99</td><td><span class="badge b-red">High</span></td><td><span class="badge b-amber">Review</span></td><td><button class="btn">Investigate</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">#4820</td><td>GhostWire</td><td>Speed hack</td><td>StormRider</td><td><span class="badge b-red">High</span></td><td><span class="badge b-amber">Review</span></td><td><button class="btn">Investigate</button></td></tr>
+          <tr><td style="font-family:var(--mono);font-size:11px;">#4818</td><td>PhantomHex</td><td>Toxic chat</td><td>DarkRealm</td><td><span class="badge b-amber">Medium</span></td><td><span class="badge b-blue">Open</span></td><td><button class="btn">Investigate</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ BANS ═══ -->
+    <div id="view-bans" class="view">
+      <div class="card">
+        <div class="hd"><div class="htitle"><i class="fa-solid fa-ban"></i>Ban management</div><button class="btn primary">+ Issue ban</button></div>
+        <table><thead><tr><th>Player</th><th>Reason</th><th>Issued by</th><th>Duration</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
+          <tr><td><span class="avatar av-b">ZZ</span>ZeroZone</td><td>Aimbot (confirmed)</td><td>Admin Root</td><td>Permanent</td><td>Never</td><td><button class="btn">Unban</button></td></tr>
+          <tr><td><span class="avatar av-a">GW</span>GhostWire</td><td>Speed hack</td><td>AutoMod</td><td>30 days</td><td>21 Jun 2026</td><td><button class="btn">Unban</button></td></tr>
+          <tr><td><span class="avatar av-c">TX</span>ToxicRex</td><td>Harassment</td><td>Admin Root</td><td>7 days</td><td>29 May 2026</td><td><button class="btn">Unban</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div id="view-settings" class="view">
+      <div class="card"><div class="hd"><div class="htitle"><i class="fa-solid fa-gear"></i>Admin settings</div></div>
+        <div style="padding:20px;font-size:13px;color:var(--text2);">Settings panel — configure whitelist, session timeouts, and audit log retention here.</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ── Navigation ────────────────────────────────────────────────────────────────
+const TITLES = {dashboard:'Dashboard',players:'Player Management',servers:'Server Instances',items:'Items & Loot',factions:'Factions',profile:'Player Profile — VoidX99',stash:'Stash Editor — VoidX99',raids:'Raid Viewer — VoidX99',reports:'Player Reports',bans:'Ban Management',settings:'Settings'};
+function nav(view, el) {
+  const target = document.getElementById('view-' + view);
+  if (!target) return;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  target.classList.add('active');
+  // Find matching sidebar item whether el was passed or not
+  const match = el && el.classList.contains('nav-item')
+    ? el
+    : Array.from(document.querySelectorAll('.nav-item')).find(n => {
+        const oc = n.getAttribute('onclick') || '';
+        return oc.includes("'" + view + "'");
+      });
+  if (match) match.classList.add('active');
+  document.getElementById('page-title').textContent = TITLES[view] || view;
+}
+
+// ── Load authenticated user info ──────────────────────────────────────────────
+fetch('/api/me').then(r => r.json()).then(u => {
+  document.getElementById('user-name').textContent = u.displayName || 'Admin';
+  if (u.avatar) {
+    const img = document.getElementById('user-avatar');
+    img.src = u.avatar;
+    img.onerror = () => { img.style.display='none'; };
+  }
+}).catch(() => {
+  document.getElementById('user-name').textContent = 'Admin';
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Item SVGs ─────────────────────────────────────────────────────────────────
+const SVG = {
+  rifle:`<svg viewBox="0 0 52 52" fill="none"><rect x="6" y="22" width="36" height="8" rx="2" fill="#8ab"/><rect x="30" y="18" width="10" height="4" rx="1" fill="#6a9"/><rect x="8" y="18" width="6" height="4" rx="1" fill="#6a9"/><rect x="38" y="20" width="8" height="3" rx="1" fill="#5a8"/><rect x="14" y="26" width="3" height="8" rx="1" fill="#789"/></svg>`,
+  pistol:`<svg viewBox="0 0 52 52" fill="none"><rect x="14" y="20" width="22" height="10" rx="2" fill="#8ab"/><rect x="30" y="16" width="8" height="4" rx="1" fill="#6a9"/><rect x="18" y="30" width="6" height="8" rx="2" fill="#789"/></svg>`,
+  helmet:`<svg viewBox="0 0 52 52" fill="none"><ellipse cx="26" cy="24" rx="14" ry="12" fill="#7a9"/><rect x="12" y="28" width="28" height="5" rx="2" fill="#6a8"/></svg>`,
+  armour:`<svg viewBox="0 0 52 52" fill="none"><path d="M14 18 Q26 14 38 18 L40 36 Q26 40 12 36Z" fill="#7a9"/><rect x="20" y="20" width="12" height="14" rx="2" fill="#6a8"/></svg>`,
+  backpack:`<svg viewBox="0 0 52 52" fill="none"><rect x="15" y="14" width="22" height="26" rx="4" fill="#8a7"/><rect x="19" y="18" width="14" height="10" rx="2" fill="#7a6"/><rect x="22" y="10" width="8" height="6" rx="2" fill="#9b8"/></svg>`,
+  module:`<svg viewBox="0 0 52 52" fill="none"><rect x="14" y="14" width="24" height="24" rx="4" fill="#a86"/><rect x="18" y="18" width="16" height="16" rx="2" fill="#8a5"/><circle cx="26" cy="26" r="4" fill="#c97"/><rect x="24" y="10" width="4" height="6" rx="1" fill="#b96"/><rect x="24" y="36" width="4" height="6" rx="1" fill="#b96"/><rect x="10" y="24" width="6" height="4" rx="1" fill="#b96"/><rect x="36" y="24" width="6" height="4" rx="1" fill="#b96"/></svg>`,
+  medkit:`<svg viewBox="0 0 52 52" fill="none"><rect x="14" y="16" width="24" height="20" rx="3" fill="#b55"/><rect x="23" y="20" width="6" height="12" rx="1" fill="#fff" opacity=".9"/><rect x="18" y="24" width="16" height="4" rx="1" fill="#fff" opacity=".9"/></svg>`,
+  grenade:`<svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="30" r="10" fill="#7a8"/><rect x="23" y="16" width="6" height="8" rx="2" fill="#6a7"/><circle cx="26" cy="30" r="4" fill="#6a7" opacity=".4"/></svg>`,
+  ammo:`<svg viewBox="0 0 52 52" fill="none"><rect x="20" y="14" width="6" height="18" rx="2" fill="#b93"/><rect x="18" y="30" width="10" height="8" rx="2" fill="#a82"/><ellipse cx="23" cy="14" rx="3" ry="2" fill="#da5"/></svg>`,
+  flower:`<svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="6" fill="#ffe"/><ellipse cx="26" cy="14" rx="5" ry="7" fill="#afa" opacity=".8"/><ellipse cx="38" cy="26" rx="7" ry="5" fill="#afa" opacity=".8"/><ellipse cx="26" cy="38" rx="5" ry="7" fill="#afa" opacity=".8"/><ellipse cx="14" cy="26" rx="7" ry="5" fill="#afa" opacity=".8"/><circle cx="26" cy="26" r="4" fill="#ff9"/></svg>`,
+  bone:`<svg viewBox="0 0 52 52" fill="none"><rect x="22" y="14" width="8" height="24" rx="2" fill="#cbc"/><circle cx="22" cy="14" r="5" fill="#bab"/><circle cx="30" cy="14" r="5" fill="#bab"/><circle cx="22" cy="38" r="5" fill="#bab"/><circle cx="30" cy="38" r="5" fill="#bab"/></svg>`,
+  stim:`<svg viewBox="0 0 52 52" fill="none"><rect x="22" y="12" width="8" height="22" rx="3" fill="#8cf"/><rect x="24" y="34" width="4" height="6" rx="1" fill="#6ad"/><ellipse cx="26" cy="12" rx="4" ry="2" fill="#aef"/></svg>`,
+  kmarks:`<svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="14" fill="#ba7"/><text x="26" y="31" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">K</text></svg>`,
+  suit:`<svg viewBox="0 0 52 52" fill="none"><path d="M16 20 Q26 16 36 20 L38 40 Q26 44 14 40Z" fill="#7a9"/><path d="M20 20 L26 26 L32 20" stroke="#9bc" stroke-width="2" fill="none"/><rect x="22" y="28" width="8" height="8" rx="2" fill="#6a8"/></svg>`,
+  trap:`<svg viewBox="0 0 52 52" fill="none"><rect x="14" y="28" width="24" height="8" rx="2" fill="#88a"/><path d="M20 28 L22 16 L26 20 L30 16 L32 28" stroke="#99b" stroke-width="2" fill="none"/></svg>`,
+};
+const LABEL_C = {legendary:'#f7c1c1',rare:'#d0c8f8',uncommon:'#b5d4f4',common:'#7a8a9a'};
+
+function makeTile(item) {
+  const rc = item.rarity || 'common';
+  const div = document.createElement('div');
+  div.className = `item-tile ${rc}`;
+  div.innerHTML = `<div class="item-img">${SVG[item.icon]||SVG.module}${item.qty>1?`<span class="item-qty">x${item.qty}</span>`:''}${item.insured?'<span class="item-ins">INS</span>':''}</div><div class="item-label"><span style="color:${LABEL_C[rc]}">${item.name}</span></div>`;
+  return div;
+}
+
+function makeEquipSlot(label, item) {
+  const div = document.createElement('div');
+  div.className = 'equip-slot';
+  const rc = item ? (item.rarity||'common') : '';
+  div.innerHTML = `<div class="slot-lbl">${label}</div>`;
+  const tile = document.createElement('div');
+  tile.className = `equip-tile ${item ? rc : 'slot-empty'}`;
+  if (item) {
+    tile.innerHTML = `<div class="equip-img">${SVG[item.icon]||SVG.module}${item.insured?'<span class="item-ins">INS</span>':''}</div><div class="equip-label"><span style="color:${LABEL_C[rc]}">${item.name}</span></div>`;
+  } else {
+    tile.innerHTML = `<div class="equip-img"></div><div class="equip-label"><span>— empty —</span></div>`;
+  }
+  div.appendChild(tile);
+  return div;
+}
+
+function renderGrid(id, items) {
+  const el = document.getElementById(id); if (!el) return;
+  items.forEach(i => el.appendChild(makeTile(i)));
+}
+function renderEquip(id, slots) {
+  const el = document.getElementById(id); if (!el) return;
+  slots.forEach(s => el.appendChild(makeEquipSlot(s.slot, s.item)));
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const liveEquip = [
+  {slot:'Primary',item:{name:'AR MK2',icon:'rifle',rarity:'legendary',insured:true}},
+  {slot:'Secondary',item:{name:'Kinetic Arbiter',icon:'pistol',rarity:'rare'}},
+  {slot:'Helmet',item:{name:'Guard Helmet',icon:'helmet',rarity:'uncommon'}},
+  {slot:'Chest',item:{name:'Korolev Suit Mk3',icon:'suit',rarity:'rare',insured:true}},
+  {slot:'Backpack',item:{name:'Large Backpack',icon:'backpack',rarity:'uncommon'}},
+  {slot:'Gadget',item:{name:'Optic Camo',icon:'module',rarity:'legendary',insured:true}},
+];
+const liveBP  = [{name:'Medkit',icon:'medkit',rarity:'common',qty:4},{name:'Pale Ivy Blossom',icon:'flower',rarity:'rare',qty:6},{name:'Shock Grenade',icon:'grenade',rarity:'uncommon',qty:2},{name:'7.62 Ammo',icon:'ammo',rarity:'common',qty:120},{name:'Crusher Bone',icon:'bone',rarity:'rare',qty:3}];
+const liveSafe = [{name:'Stim Shot',icon:'stim',rarity:'uncommon',qty:2},{name:'K-Marks Chip',icon:'kmarks',rarity:'common',qty:1}];
+const d1Equip = [
+  {slot:'Primary',item:{name:'AR MK2',icon:'rifle',rarity:'legendary',insured:true}},
+  {slot:'Secondary',item:{name:'Manticore',icon:'pistol',rarity:'uncommon'}},
+  {slot:'Helmet',item:{name:'Rare Helmet Mk2',icon:'helmet',rarity:'rare'}},
+  {slot:'Chest',item:{name:'Korolev Suit Mk3',icon:'suit',rarity:'rare',insured:true}},
+  {slot:'Backpack',item:{name:'Medium Backpack',icon:'backpack',rarity:'common'}},
+  {slot:'Gadget',item:null},
+];
+const d1Lost = [{name:'Medkit',icon:'medkit',rarity:'common',qty:2},{name:'AR Ammo',icon:'ammo',rarity:'common',qty:60},{name:'Pale Ivy Blossom',icon:'flower',rarity:'rare',qty:2},{name:'Frag Grenade',icon:'grenade',rarity:'common',qty:1}];
+const d2Equip = [
+  {slot:'Primary',item:{name:'Burst Rifle',icon:'rifle',rarity:'uncommon'}},
+  {slot:'Secondary',item:{name:'PKR Maelstrom',icon:'pistol',rarity:'rare'}},
+  {slot:'Helmet',item:null},
+  {slot:'Chest',item:{name:'Common Suit Mk1',icon:'armour',rarity:'common'}},
+  {slot:'Backpack',item:{name:'Small Backpack',icon:'backpack',rarity:'common'}},
+  {slot:'Gadget',item:{name:'Grav Trap',icon:'trap',rarity:'uncommon'}},
+];
+const d2Lost = [{name:'Medkit',icon:'medkit',rarity:'common',qty:1},{name:'Crusher Bone',icon:'bone',rarity:'rare',qty:4},{name:'Stim Shot',icon:'stim',rarity:'uncommon',qty:1}];
+
+let stash = [
+  {id:1,name:'AR MK2',icon:'rifle',rarity:'legendary',qty:2,insured:true},
+  {id:2,name:'Pale Ivy Blossom',icon:'flower',rarity:'rare',qty:14},
+  {id:3,name:'Optic Camo Module',icon:'module',rarity:'legendary',qty:1,insured:true},
+  {id:4,name:'Medkit',icon:'medkit',rarity:'common',qty:38},
+  {id:5,name:'Shock Grenade',icon:'grenade',rarity:'uncommon',qty:12},
+  {id:6,name:'Crusher Bone',icon:'bone',rarity:'rare',qty:7},
+  {id:7,name:'Korolev Suit Mk3',icon:'suit',rarity:'rare',qty:1,insured:true},
+];
+
+const insurance = [
+  {id:1,tier:'Standard',items:['AR MK2 x1','Korolev Suit Mk3 x1'],expires:'29 May 2026'},
+  {id:2,tier:'Premium',items:['Optic Camo Module x1'],expires:'14 Jun 2026'},
+];
+
+// ── Render all item grids ─────────────────────────────────────────────────────
+renderEquip('live-equip', liveEquip);
+renderGrid('live-bp', liveBP);
+renderGrid('live-safe', liveSafe);
+renderEquip('d1-equip', d1Equip);
+renderGrid('d1-lost', d1Lost);
+renderEquip('d2-equip', d2Equip);
+renderGrid('d2-lost', d2Lost);
+
+function renderStash() {
+  const el = document.getElementById('stash-grid'); if (!el) return;
+  el.innerHTML = '';
+  stash.forEach(item => el.appendChild(makeTile(item)));
+}
+renderStash();
+
+function renderInsurance() {
+  const el = document.getElementById('ins-list'); if (!el) return;
+  el.innerHTML = insurance.map(p => `
+    <div style="border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:7px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:600;">${p.tier} insurance</span><div style="display:flex;gap:7px;"><span class="badge b-green">Active</span><button class="btn danger" onclick="cancelIns(${p.id})">Cancel</button></div></div>
+      <div style="font-size:12px;color:var(--text2);">Items: ${p.items.join(', ')}</div>
+      <div style="font-size:12px;color:var(--text2);">Expires: ${p.expires}</div>
+      <div style="display:flex;gap:7px;"><button class="btn primary" onclick="extendIns(${p.id})">Extend 30 days</button></div>
+    </div>
+  `).join('');
+}
+renderInsurance();
+
+// ── Stash actions ─────────────────────────────────────────────────────────────
+let nextId = 10;
+function showAdd(){ document.getElementById('add-row').style.display='flex'; }
+function hideAdd(){ document.getElementById('add-row').style.display='none'; }
+function addItem(){
+  const name = document.getElementById('new-name').value.trim(); if (!name) return;
+  const rar  = document.getElementById('new-rar').value.toLowerCase();
+  const qty  = parseInt(document.getElementById('new-qty').value)||1;
+  const iconMap = {Weapon:'rifle',Gear:'armour',Consumable:'medkit',Throwable:'grenade','Quest item':'flower','Creature drop':'bone'};
+  const cat  = document.getElementById('new-cat').value;
+  stash.push({id:nextId++,name,icon:iconMap[cat]||'module',rarity:rar,qty});
+  document.getElementById('new-name').value='';
+  hideAdd(); renderStash(); toast(`${name} x${qty} added.`);
+}
+function confirmClear(){
+  if (confirm('Clear entire stash for VoidX99?')){ stash=[]; renderStash(); toast('Stash cleared.'); }
+}
+function cancelIns(id){ const i=insurance.findIndex(x=>x.id===id); if(i>-1){const t=insurance[i].tier;insurance.splice(i,1);renderInsurance();toast(`${t} insurance cancelled.`);} }
+function extendIns(id){ const p=insurance.find(x=>x.id===id); if(p){p.expires='21 Jul 2026';renderInsurance();toast(`${p.tier} extended.`);} }
+function saveCur(field,label){ const v=parseInt(document.getElementById(field).value)||0; toast(`${label} set to ${v.toLocaleString()}.`); }
+
+// ── Raid timer ────────────────────────────────────────────────────────────────
+let secs = 14*60+32;
+setInterval(()=>{
+  secs++;
+  const el=document.getElementById('rtimer'); if(!el)return;
+  const m=Math.floor(secs/60),s=secs%60;
+  el.textContent=m+':'+(s<10?'0':'')+s;
+},1000);
+</script>
+</body>
+</html>
